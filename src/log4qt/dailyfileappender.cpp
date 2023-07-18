@@ -28,7 +28,8 @@
 #include <QFileInfo>
 #include <QRegularExpression>
 #include <QStringList>
-#include <QtConcurrentRun>
+//#include <QtConcurrentRun>
+#include <QtConcurrent/QtConcurrent>
 #include <QStringBuilder>
 
 namespace Log4Qt
