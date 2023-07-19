@@ -20,10 +20,10 @@ LOG4QT_PATH = ../../
 DEFINES += LOG4QT_LIBRARY
 
 # 指定编译项目时应该被搜索的 #include 目录
-INCLUDEPATH += $$LOG4QT_PATH/src \
-               $$LOG4QT_PATH/src/log4qt \
-               $$LOG4QT_PATH/include \
-               $$LOG4QT_PATH/include/log4qt
+#INCLUDEPATH += $$LOG4QT_PATH/src \
+#               $$LOG4QT_PATH/src/log4qt \
+#               $$LOG4QT_PATH/include \
+#               $$LOG4QT_PATH/include/log4qt
 
 # 将 Log4Qt 源代码添加至项目中
 #include($$LOG4QT_PATH/build.pri)
@@ -31,9 +31,11 @@ INCLUDEPATH += $$LOG4QT_PATH/src \
 #include($$LOG4QT_PATH/src/log4qt/log4qt.pri)
 
 win32:CONFIG(release, debug|release): {
+INCLUDEPATH += $$PWD/log4qtlib/include
 LIBS += -L$$PWD/log4qtlib/lib/release/ -llog4qt
 }
 else:win32:CONFIG(debug, debug|release): {
+INCLUDEPATH += $$PWD/log4qtlib/include
 LIBS += -L$$PWD/log4qtlib/lib/debug/ -llog4qt
 }
 
