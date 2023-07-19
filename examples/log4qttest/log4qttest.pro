@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -25,10 +25,10 @@ INCLUDEPATH += $$LOG4QT_PATH/src \
                $$LOG4QT_PATH/include/log4qt
 
 # 将 Log4Qt 源代码添加至项目中
-include($$LOG4QT_PATH/build.pri)
-include($$LOG4QT_PATH/g++.pri)
-include($$LOG4QT_PATH/src/log4qt/log4qt.pri)
-
+#include($$LOG4QT_PATH/build.pri)
+#include($$LOG4QT_PATH/g++.pri)
+#include($$LOG4QT_PATH/src/log4qt/log4qt.pri)
+LIBS += -L$$LOG4QT_PATH/bin -llog4qt
 }else{
 message(Pro: Not Use Src Pri)
 }
