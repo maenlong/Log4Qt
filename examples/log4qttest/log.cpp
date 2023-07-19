@@ -1,13 +1,14 @@
-#include "Log.h"
-#include "log4qt/log4qt.h"
+#include "log.h"
+
+#include "log4qt/basicconfigurator.h"
 #include "log4qt/propertyconfigurator.h"
 
-Log * Log::_pInstance = 0;
+Log * Log::_pInstance = nullptr;
 QMutex Log::_mutex;
-Log4Qt::Logger * Log::_pLoggerDebug = 0;
-Log4Qt::Logger * Log::_pLoggerInfo = 0;
-Log4Qt::Logger * Log::_pLoggerWarn = 0;
-Log4Qt::Logger * Log::_pLoggerError = 0;
+Log4Qt::Logger * Log::_pLoggerDebug = nullptr;
+Log4Qt::Logger * Log::_pLoggerInfo = nullptr;
+Log4Qt::Logger * Log::_pLoggerWarn = nullptr;
+Log4Qt::Logger * Log::_pLoggerError = nullptr;
 QString Log::_configFilePath;
 
 Log::Log(QObject *parent) : QObject(parent)

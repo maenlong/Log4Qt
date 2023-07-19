@@ -11,8 +11,6 @@
 #include <QThread>
 
 #include "log4qt/logger.h"
-#include "log4qt/basicconfigurator.h"
-
 
 #define LOG_OUTPUT_MODE 2       //0.不处理 1.只回调 2.只打印 3.写文件 4.全处理
 
