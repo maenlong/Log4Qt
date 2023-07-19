@@ -14,15 +14,38 @@ CONFIG += c++11
 LOG4QT_PATH = ../../
 # 定义所需的宏
 DEFINES += LOG4QT_LIBRARY
+
+win32{
+message(Pro: Use Src Pri)
+
 # 指定编译项目时应该被搜索的 #include 目录
 INCLUDEPATH += $$LOG4QT_PATH/src \
                $$LOG4QT_PATH/src/log4qt \
                $$LOG4QT_PATH/include \
                $$LOG4QT_PATH/include/log4qt
+
 # 将 Log4Qt 源代码添加至项目中
-include($$LOG4QT_PATH/src/log4qt/log4qt.pri)
 include($$LOG4QT_PATH/build.pri)
 include($$LOG4QT_PATH/g++.pri)
+include($$LOG4QT_PATH/src/log4qt/log4qt.pri)
+
+}else{
+message(Pro: Not Use Src Pri)
+}
+
+unix{
+message(Pro: Use so)
+
+# 指定编译项目时应该被搜索的 #include 目录
+INCLUDEPATH += $$LOG4QT_PATH/src \
+               $$LOG4QT_PATH/src/log4qt \
+               $$LOG4QT_PATH/include \
+               $$LOG4QT_PATH/include/log4qt
+
+LIBS += -L$$LOG4QT_PATH/bin -llog4qt
+}else{
+message(Pro: Not Use so)
+}
 
 #-----------------------------------------------------------------------
 
