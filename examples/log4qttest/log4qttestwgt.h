@@ -15,6 +15,14 @@ public:
     Log4QtTestWgt(QWidget *parent = nullptr);
     ~Log4QtTestWgt();
 
+private slots:
+    void on_debugBtn_clicked();
+    void on_infoBtn_clicked();
+    void on_warnBtn_clicked();
+    void on_errorBtn_clicked();
+
+    void slot_onLogStr(int level, const QString &msg);
+
 private:
     Ui::Log4QtTestWgt *ui;
 };
