@@ -15,7 +15,7 @@ QMAKE_LFLAGS_RELEASE = $$QMAKE_LFLAGS_RELEASE_WITH_DEBUGINFO
 #-----------------------------------------------------------------------
 
 # 定义 Log4Qt 源码根目录
-LOG4QT_PATH = ../../
+#LOG4QT_PATH = ../../
 # 定义所需的宏
 DEFINES += LOG4QT_LIBRARY
 
@@ -40,7 +40,8 @@ LIBS += -L$$PWD/log4qtlib/lib/debug/ -llog4qt
 }
 
 unix{
-LIBS += -L$$LOG4QT_PATH/bin -llog4qt
+INCLUDEPATH += $$PWD/log4qtlib/include
+LIBS += -L$$PWD/log4qtlib/lib -llog4qt
 }
 
 #-----------------------------------------------------------------------
