@@ -8,15 +8,16 @@ CONFIG += c++11
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+# 让Release版本生成调试信息
+QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO
+QMAKE_LFLAGS_RELEASE = $$QMAKE_LFLAGS_RELEASE_WITH_DEBUGINFO
+
 #-----------------------------------------------------------------------
 
 # 定义 Log4Qt 源码根目录
 LOG4QT_PATH = ../../
 # 定义所需的宏
 DEFINES += LOG4QT_LIBRARY
-
-win32{
-message(Pro: Use Src Pri)
 
 # 指定编译项目时应该被搜索的 #include 目录
 INCLUDEPATH += $$LOG4QT_PATH/src \
@@ -28,23 +29,16 @@ INCLUDEPATH += $$LOG4QT_PATH/src \
 #include($$LOG4QT_PATH/build.pri)
 #include($$LOG4QT_PATH/g++.pri)
 #include($$LOG4QT_PATH/src/log4qt/log4qt.pri)
-LIBS += -L$$LOG4QT_PATH/bin -llog4qt
-}else{
-message(Pro: Not Use Src Pri)
+
+win32:CONFIG(release, debug|release): {
+LIBS += -L$$PWD/log4qtlib/lib/release/ -llog4qt
+}
+else:win32:CONFIG(debug, debug|release): {
+LIBS += -L$$PWD/log4qtlib/lib/debug/ -llog4qt
 }
 
 unix{
-message(Pro: Use so)
-
-# 指定编译项目时应该被搜索的 #include 目录
-INCLUDEPATH += $$LOG4QT_PATH/src \
-               $$LOG4QT_PATH/src/log4qt \
-               $$LOG4QT_PATH/include \
-               $$LOG4QT_PATH/include/log4qt
-
 LIBS += -L$$LOG4QT_PATH/bin -llog4qt
-}else{
-message(Pro: Not Use so)
 }
 
 #-----------------------------------------------------------------------
