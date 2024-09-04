@@ -32,16 +32,21 @@ DEFINES += LOG4QT_LIBRARY
 
 win32:CONFIG(release, debug|release): {
 INCLUDEPATH += $$PWD/log4qtlib/include
-LIBS += -L$$PWD/log4qtlib/lib/release/ -llog4qt
+LIBS += -L$$PWD/log4qtlib/lib/windows/release/ -llog4qt
 }
 else:win32:CONFIG(debug, debug|release): {
 INCLUDEPATH += $$PWD/log4qtlib/include
-LIBS += -L$$PWD/log4qtlib/lib/debug/ -llog4qt
+LIBS += -L$$PWD/log4qtlib/lib/windows/debug/ -llog4qt
 }
 
-unix{
+macx:{
 INCLUDEPATH += $$PWD/log4qtlib/include
-LIBS += -L$$PWD/log4qtlib/lib -llog4qt
+LIBS += -L$$PWD/log4qtlib/lib/mac/ -llog4qt
+}
+
+unix:!macx:{
+INCLUDEPATH += $$PWD/log4qtlib/include
+LIBS += -L$$PWD/log4qtlib/lib/linux -llog4qt
 }
 
 #-----------------------------------------------------------------------
