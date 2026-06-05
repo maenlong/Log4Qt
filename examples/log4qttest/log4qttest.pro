@@ -16,8 +16,9 @@ QMAKE_LFLAGS_RELEASE = $$QMAKE_LFLAGS_RELEASE_WITH_DEBUGINFO
 
 # 定义 Log4Qt 源码根目录
 #LOG4QT_PATH = ../../
-# 定义所需的宏
-DEFINES += LOG4QT_LIBRARY
+# 链接 Log4Qt 静态库时，消费方必须定义 LOG4QT_STATIC，
+# 否则头文件中的导出宏会按动态库(dllimport/dllexport)展开，导致链接异常
+DEFINES += LOG4QT_STATIC
 
 # 指定编译项目时应该被搜索的 #include 目录
 #INCLUDEPATH += $$LOG4QT_PATH/src \
@@ -30,18 +31,50 @@ DEFINES += LOG4QT_LIBRARY
 #include($$LOG4QT_PATH/g++.pri)
 #include($$LOG4QT_PATH/src/log4qt/log4qt.pri)
 
-win32:CONFIG(release, debug|release): {
+# 根据 平台 + 架构 选择对应的预编译静态库
+# 目录约定（与 qBreakpad 项目保持一致）：
+#   windows : x86 / x64        （内部再分 debug / release）
+#   mac     : x86_64 / arm64
+#   linux   : x86_64 / arm64
 INCLUDEPATH += $$PWD/log4qtlib/include
-LIBS += -L$$PWD/log4qtlib/lib/release/ -llog4qt
-}
-else:win32:CONFIG(debug, debug|release): {
-INCLUDEPATH += $$PWD/log4qtlib/include
-LIBS += -L$$PWD/log4qtlib/lib/debug/ -llog4qt
+DEPENDPATH  += $$PWD/log4qtlib/include
+
+# ---- Windows ----
+win32 {
+    contains(QT_ARCH, x86_64)|contains(QMAKE_TARGET.arch, x86_64) {
+        LOG4QT_WIN_ARCH = x64
+    } else {
+        LOG4QT_WIN_ARCH = x86
+    }
+    CONFIG(release, debug|release) {
+        LOG4QT_LIB_DIR = $$PWD/log4qtlib/lib/windows/$$LOG4QT_WIN_ARCH/release
+    } else {
+        LOG4QT_LIB_DIR = $$PWD/log4qtlib/lib/windows/$$LOG4QT_WIN_ARCH/debug
+    }
+    LIBS += -L$$LOG4QT_LIB_DIR -llog4qt
+    DEPENDPATH += $$LOG4QT_LIB_DIR
 }
 
-unix{
-INCLUDEPATH += $$PWD/log4qtlib/include
-LIBS += -L$$PWD/log4qtlib/lib -llog4qt
+# ---- macOS ----
+macx {
+    contains(QT_ARCH, arm64) {
+        LOG4QT_LIB_DIR = $$PWD/log4qtlib/lib/mac/arm64
+    } else {
+        LOG4QT_LIB_DIR = $$PWD/log4qtlib/lib/mac/x86_64
+    }
+    LIBS += -L$$LOG4QT_LIB_DIR -llog4qt
+    PRE_TARGETDEPS += $$LOG4QT_LIB_DIR/liblog4qt.a
+}
+
+# ---- Linux ----
+unix:!macx {
+    contains(QT_ARCH, arm64)|contains(QT_ARCH, aarch64) {
+        LOG4QT_LIB_DIR = $$PWD/log4qtlib/lib/linux/arm64
+    } else {
+        LOG4QT_LIB_DIR = $$PWD/log4qtlib/lib/linux/x86_64
+    }
+    LIBS += -L$$LOG4QT_LIB_DIR -llog4qt
+    PRE_TARGETDEPS += $$LOG4QT_LIB_DIR/liblog4qt.a
 }
 
 #-----------------------------------------------------------------------

@@ -3,12 +3,13 @@
 *.slo
 *.lo
 *.o
-*.a
 *.la
 *.lai
-*.so
-*.dll
-*.dylib
+# 下列为预编译库产物后缀：需要把各平台/架构静态库提交进 log4qtlib/lib，故不忽略
+#*.a
+#*.so
+#*.dll
+#*.dylib
 
 # Qt-es
 
@@ -33,3 +34,23 @@ Makefile*
 #QtCtreator Qml
 *.qmlproject.user
 *.qmlproject.user.*
+
+# 构建产物 / IDE 中间文件
+build-*/
+.qtc_clangd/
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.qtvscr
+vc140.pdb
+.qmake.stash
+
+# qmake/MSVC 在源码目录内的中间产物
+/examples/log4qttest/debug/
+/examples/log4qttest/release/
+/src/log4qt/debug/
+/src/log4qt/release/
+
+# demo 运行时日志输出
+/examples/log4qttest/log/
