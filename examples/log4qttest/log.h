@@ -12,7 +12,7 @@
 
 #include "log4qt/logger.h"
 
-#define LOG_OUTPUT_MODE 2       //0.不处理 1.只回调 2.只打印 3.写文件 4.全处理
+#define LOG_OUTPUT_MODE 4       //0.不处理 1.只回调 2.只打印 3.写文件 4.全处理
 
 
 // 以文件行列记录信息，非以类名对象形式
@@ -138,7 +138,16 @@ public slots:
     static Log * instance();
 
 public slots:
-    void init(QString configFilePath);
+    /*!
+     * 加载日志配置并将 conf 中的 ${LOG_DIR} 占位符替换为指定目录。
+     *
+     * \param configFilePath log.conf 路径（通常为 applicationDirPath()/log.conf）
+     * \param logDir         日志文件输出目录。**必传，不允许为空**。
+     *                       调用方必须显式决定路径策略，例如：
+     *                       QStandardPaths::writableLocation(AppLocalDataLocation)
+     *                       传空字符串将记录 warning 并直接返回（不加载配置）。
+     */
+    void init(QString configFilePath, QString logDir);
 
 public slots:
     void debug(QString msg);

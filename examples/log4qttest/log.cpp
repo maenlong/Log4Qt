@@ -2,6 +2,12 @@
 
 #include "log4qt/basicconfigurator.h"
 #include "log4qt/propertyconfigurator.h"
+#include "log4qt/helpers/properties.h"
+
+#include <QFile>
+#include <QDir>
+#include <QBuffer>
+#include <QDebug>
 
 Log * Log::_pInstance = nullptr;
 QMutex Log::_mutex;
@@ -31,10 +37,51 @@ Log *Log::instance()
     return _pInstance;
 }
 
-void Log::init(QString configFilePath)
+void Log::init(QString configFilePath, QString logDir)
 {
     _configFilePath = configFilePath;
-     Log4Qt::PropertyConfigurator::configure(_configFilePath);
+
+    // 1) 校验：logDir 必传，由调用方显式决定路径策略
+    if (logDir.isEmpty())
+    {
+        qWarning() << "[Log] init aborted: logDir must not be empty."
+                      " Caller must decide the log directory explicitly"
+                      " (e.g. via QStandardPaths::writableLocation).";
+        return;
+    }
+
+    // 2) 规范化路径并确保目录存在
+    //    - 统一为正斜杠：Java properties 格式下 '\' 会被解释为转义
+    //    - RollingFileAppender 不会自动建目录，必须先确保存在，否则文件打不开
+    QString effectiveLogDir = logDir;
+    effectiveLogDir.replace(QLatin1Char('\\'), QLatin1Char('/'));
+    if (!QDir().mkpath(effectiveLogDir))
+    {
+        qWarning() << "[Log] failed to create log dir:" << effectiveLogDir;
+    }
+
+    // 3) 读取 log.conf 文本
+    QFile f(configFilePath);
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qWarning() << "[Log] open log.conf failed:" << configFilePath
+                   << "error:" << f.errorString();
+        return;
+    }
+    QString text = QString::fromUtf8(f.readAll());
+    f.close();
+
+    // 4) 替换占位符
+    text.replace(QStringLiteral("${LOG_DIR}"), effectiveLogDir);
+
+    // 5) 用 in-memory Properties 喂给 PropertyConfigurator
+    //    （避免落盘临时文件，且不依赖 Log4Qt 端的环境变量替换机制）
+    QByteArray bytes = text.toUtf8();
+    QBuffer buf(&bytes);
+    buf.open(QIODevice::ReadOnly);
+    Log4Qt::Properties props;
+    props.load(&buf);
+    Log4Qt::PropertyConfigurator::configure(props);
 
     _pLoggerDebug = Log4Qt::Logger::logger("debug");
     _pLoggerInfo = Log4Qt::Logger::logger("info");

@@ -79,6 +79,16 @@ unix:!macx {
 
 #-----------------------------------------------------------------------
 
+# 链接前把 bin/ 下的运行时资源（log.conf 等）拷到 exe 输出目录
+# main.cpp 通过 applicationDirPath()/log.conf 加载配置，必须与 exe 同目录
+# 跨平台依赖：$$QMAKE_COPY 在 Windows 展开为 "copy /y"，Unix 展开为 "cp -f"
+DEPLOY_FILES = $$files($$PWD/bin/*)
+for(deploy_file, DEPLOY_FILES) {
+    QMAKE_PRE_LINK += $${QMAKE_COPY} $$shell_quote($$shell_path($$deploy_file)) $$shell_quote($$shell_path($$OUT_PWD)) $$escape_expand(\\n\\t)
+}
+
+#-----------------------------------------------------------------------
+
 SOURCES += \
     main.cpp \
     log.cpp \
