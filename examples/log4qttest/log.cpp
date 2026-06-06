@@ -1,26 +1,47 @@
 #include "log.h"
 
+#ifdef HAVE_LOG4QT
 #include "log4qt/basicconfigurator.h"
 #include "log4qt/propertyconfigurator.h"
 #include "log4qt/helpers/properties.h"
+#endif
 
 #include <QFile>
 #include <QDir>
 #include <QBuffer>
 #include <QDebug>
 
+// 日志等级常量：无 log4qt 时仍要给 sig_onLogStr 提供有效 int（与 Log4Qt::Level 对齐）
+namespace {
+#ifdef HAVE_LOG4QT
+    const int kLvlDebug = Log4Qt::Level::DEBUG_INT;
+    const int kLvlInfo  = Log4Qt::Level::INFO_INT;
+    const int kLvlWarn  = Log4Qt::Level::WARN_INT;
+    const int kLvlError = Log4Qt::Level::ERROR_INT;
+#else
+    const int kLvlDebug = 96;
+    const int kLvlInfo  = 128;
+    const int kLvlWarn  = 150;
+    const int kLvlError = 182;
+#endif
+}
+
 Log * Log::_pInstance = nullptr;
 QMutex Log::_mutex;
+#ifdef HAVE_LOG4QT
 Log4Qt::Logger * Log::_pLoggerDebug = nullptr;
 Log4Qt::Logger * Log::_pLoggerInfo = nullptr;
 Log4Qt::Logger * Log::_pLoggerWarn = nullptr;
 Log4Qt::Logger * Log::_pLoggerError = nullptr;
+#endif
 QString Log::_configFilePath;
 
 Log::Log(QObject *parent) : QObject(parent)
 {
+#ifdef HAVE_LOG4QT
     // 一定要配置文件，不然运行起来会直接当掉
     Log4Qt::BasicConfigurator::configure();
+#endif
 }
 
 Log *Log::instance()
@@ -41,6 +62,12 @@ void Log::init(QString configFilePath, QString logDir)
 {
     _configFilePath = configFilePath;
 
+#ifndef HAVE_LOG4QT
+    Q_UNUSED(logDir);
+    qWarning() << "[Log] HAVE_LOG4QT not defined; init is a no-op."
+                  " Log subsystem will not write any file.";
+    return;
+#else
     // 1) 校验：logDir 必传，由调用方显式决定路径策略
     if (logDir.isEmpty())
     {
@@ -87,6 +114,7 @@ void Log::init(QString configFilePath, QString logDir)
     _pLoggerInfo = Log4Qt::Logger::logger("info");
     _pLoggerWarn = Log4Qt::Logger::logger("warn");
     _pLoggerError = Log4Qt::Logger::logger("error");
+#endif
 }
 
 void Log::debug(QString msg)
@@ -97,23 +125,29 @@ void Log::debug(QString msg)
     }
     else if(1 == LOG_OUTPUT_MODE)
     {
-        emit sig_onLogStr(Log4Qt::Level::DEBUG_INT, msg);
+        emit sig_onLogStr(kLvlDebug, msg);
     }
     else if(2 == LOG_OUTPUT_MODE)
     {
         qDebug() << msg;
-        emit sig_onLogStr(Log4Qt::Level::DEBUG_INT, msg);
+        emit sig_onLogStr(kLvlDebug, msg);
     }
     else if(3 == LOG_OUTPUT_MODE)
     {
-        _pLoggerDebug->debug(msg);
-        emit sig_onLogStr(Log4Qt::Level::DEBUG_INT, msg);
+#ifdef HAVE_LOG4QT
+        if (_pLoggerDebug)
+            _pLoggerDebug->debug(msg);
+#endif
+        emit sig_onLogStr(kLvlDebug, msg);
     }
     else if(4 == LOG_OUTPUT_MODE)
     {
         qDebug() << msg;
-        _pLoggerDebug->debug(msg);
-        emit sig_onLogStr(Log4Qt::Level::DEBUG_INT, msg);
+#ifdef HAVE_LOG4QT
+        if (_pLoggerDebug)
+            _pLoggerDebug->debug(msg);
+#endif
+        emit sig_onLogStr(kLvlDebug, msg);
     }
     else
     {
@@ -129,23 +163,29 @@ void Log::info(QString msg)
     }
     else if(1 == LOG_OUTPUT_MODE)
     {
-        emit sig_onLogStr(Log4Qt::Level::INFO_INT, msg);
+        emit sig_onLogStr(kLvlInfo, msg);
     }
     else if(2 == LOG_OUTPUT_MODE)
     {
         qInfo() << msg;
-        emit sig_onLogStr(Log4Qt::Level::INFO_INT, msg);
+        emit sig_onLogStr(kLvlInfo, msg);
     }
     else if(3 == LOG_OUTPUT_MODE)
     {
-        _pLoggerInfo->info(msg);
-        emit sig_onLogStr(Log4Qt::Level::INFO_INT, msg);
+#ifdef HAVE_LOG4QT
+        if (_pLoggerInfo)
+            _pLoggerInfo->info(msg);
+#endif
+        emit sig_onLogStr(kLvlInfo, msg);
     }
     else if(4 == LOG_OUTPUT_MODE)
     {
         qInfo() << msg;
-        _pLoggerInfo->info(msg);
-        emit sig_onLogStr(Log4Qt::Level::INFO_INT, msg);
+#ifdef HAVE_LOG4QT
+        if (_pLoggerInfo)
+            _pLoggerInfo->info(msg);
+#endif
+        emit sig_onLogStr(kLvlInfo, msg);
     }
     else
     {
@@ -162,23 +202,29 @@ void Log::warn(QString msg)
     }
     else if(1 == LOG_OUTPUT_MODE)
     {
-        emit sig_onLogStr(Log4Qt::Level::WARN_INT, msg);
+        emit sig_onLogStr(kLvlWarn, msg);
     }
     else if(2 == LOG_OUTPUT_MODE)
     {
         qWarning() << msg;
-        emit sig_onLogStr(Log4Qt::Level::WARN_INT, msg);
+        emit sig_onLogStr(kLvlWarn, msg);
     }
     else if(3 == LOG_OUTPUT_MODE)
     {
-        _pLoggerWarn->warn(msg);
-        emit sig_onLogStr(Log4Qt::Level::WARN_INT, msg);
+#ifdef HAVE_LOG4QT
+        if (_pLoggerWarn)
+            _pLoggerWarn->warn(msg);
+#endif
+        emit sig_onLogStr(kLvlWarn, msg);
     }
     else if(4 == LOG_OUTPUT_MODE)
     {
         qWarning() << msg;
-        _pLoggerWarn->warn(msg);
-        emit sig_onLogStr(Log4Qt::Level::WARN_INT, msg);
+#ifdef HAVE_LOG4QT
+        if (_pLoggerWarn)
+            _pLoggerWarn->warn(msg);
+#endif
+        emit sig_onLogStr(kLvlWarn, msg);
     }
     else
     {
@@ -194,23 +240,29 @@ void Log::error(QString msg)
     }
     else if(1 == LOG_OUTPUT_MODE)
     {
-        emit sig_onLogStr(Log4Qt::Level::ERROR_INT, msg);
+        emit sig_onLogStr(kLvlError, msg);
     }
     else if(2 == LOG_OUTPUT_MODE)
     {
         qCritical() << msg;
-        emit sig_onLogStr(Log4Qt::Level::ERROR_INT, msg);
+        emit sig_onLogStr(kLvlError, msg);
     }
     else if(3 == LOG_OUTPUT_MODE)
     {
-        _pLoggerError->error(msg);
-        emit sig_onLogStr(Log4Qt::Level::ERROR_INT, msg);
+#ifdef HAVE_LOG4QT
+        if (_pLoggerError)
+            _pLoggerError->error(msg);
+#endif
+        emit sig_onLogStr(kLvlError, msg);
     }
     else if(4 == LOG_OUTPUT_MODE)
     {
         qCritical() << msg;
-        _pLoggerError->error(msg);
-        emit sig_onLogStr(Log4Qt::Level::ERROR_INT, msg);
+#ifdef HAVE_LOG4QT
+        if (_pLoggerError)
+            _pLoggerError->error(msg);
+#endif
+        emit sig_onLogStr(kLvlError, msg);
     }
     else
     {

@@ -51,8 +51,16 @@ win32 {
     } else {
         LOG4QT_LIB_DIR = $$PWD/log4qtlib/lib/windows/$$LOG4QT_WIN_ARCH/debug
     }
-    LIBS += -L$$LOG4QT_LIB_DIR -llog4qt
-    DEPENDPATH += $$LOG4QT_LIB_DIR
+    LOG4QT_SDK_FILE = $$LOG4QT_LIB_DIR/log4qt.lib
+    exists($$LOG4QT_SDK_FILE) {
+        message("[log4qt] found library: $$LOG4QT_SDK_FILE")
+        DEFINES += HAVE_LOG4QT
+        LIBS += -L$$LOG4QT_LIB_DIR -llog4qt
+        DEPENDPATH += $$LOG4QT_LIB_DIR
+    } else {
+        warning("[log4qt] LIBRARY NOT FOUND: $$LOG4QT_SDK_FILE")
+        warning("[log4qt] HAVE_LOG4QT not defined; log subsystem will be unavailable")
+    }
 }
 
 # ---- macOS ----
@@ -62,8 +70,16 @@ macx {
     } else {
         LOG4QT_LIB_DIR = $$PWD/log4qtlib/lib/mac/x86_64
     }
-    LIBS += -L$$LOG4QT_LIB_DIR -llog4qt
-    PRE_TARGETDEPS += $$LOG4QT_LIB_DIR/liblog4qt.a
+    LOG4QT_SDK_FILE = $$LOG4QT_LIB_DIR/liblog4qt.a
+    exists($$LOG4QT_SDK_FILE) {
+        message("[log4qt] found library: $$LOG4QT_SDK_FILE")
+        DEFINES += HAVE_LOG4QT
+        LIBS += -L$$LOG4QT_LIB_DIR -llog4qt
+        PRE_TARGETDEPS += $$LOG4QT_SDK_FILE
+    } else {
+        warning("[log4qt] LIBRARY NOT FOUND: $$LOG4QT_SDK_FILE")
+        warning("[log4qt] HAVE_LOG4QT not defined; log subsystem will be unavailable")
+    }
 }
 
 # ---- Linux ----
@@ -73,18 +89,35 @@ unix:!macx {
     } else {
         LOG4QT_LIB_DIR = $$PWD/log4qtlib/lib/linux/x86_64
     }
-    LIBS += -L$$LOG4QT_LIB_DIR -llog4qt
-    PRE_TARGETDEPS += $$LOG4QT_LIB_DIR/liblog4qt.a
+    LOG4QT_SDK_FILE = $$LOG4QT_LIB_DIR/liblog4qt.a
+    exists($$LOG4QT_SDK_FILE) {
+        message("[log4qt] found library: $$LOG4QT_SDK_FILE")
+        DEFINES += HAVE_LOG4QT
+        LIBS += -L$$LOG4QT_LIB_DIR -llog4qt
+        PRE_TARGETDEPS += $$LOG4QT_SDK_FILE
+    } else {
+        warning("[log4qt] LIBRARY NOT FOUND: $$LOG4QT_SDK_FILE")
+        warning("[log4qt] HAVE_LOG4QT not defined; log subsystem will be unavailable")
+    }
 }
 
 #-----------------------------------------------------------------------
 
-# 链接前把 bin/ 下的运行时资源（log.conf 等）拷到 exe 输出目录
-# main.cpp 通过 applicationDirPath()/log.conf 加载配置，必须与 exe 同目录
-# 跨平台依赖：$$QMAKE_COPY 在 Windows 展开为 "copy /y"，Unix 展开为 "cp -f"
-DEPLOY_FILES = $$files($$PWD/bin/*)
-for(deploy_file, DEPLOY_FILES) {
-    QMAKE_PRE_LINK += $${QMAKE_COPY} $$shell_quote($$shell_path($$deploy_file)) $$shell_quote($$shell_path($$OUT_PWD)) $$escape_expand(\\n\\t)
+# 链接后递归拷贝 bin/ 到 exe 同目录（macOS 进 .app/Contents/MacOS）
+contains(DEFINES, HAVE_LOG4QT) {
+    macx: DEPLOY_DST = $$OUT_PWD/$${TARGET}.app/Contents/MacOS
+    else: DEPLOY_DST = $$OUT_PWD
+
+    message("[log4qt] deploy bin/ contents -> $$DEPLOY_DST")
+
+    win32 {
+        QMAKE_POST_LINK += xcopy /S /Q /Y /I $$shell_quote($$shell_path($$PWD/bin)) $$shell_quote($$shell_path($$DEPLOY_DST)) $$escape_expand(\\n\\t)
+    } else {
+        # bin/. 语法拷贝内容（而非 bin 目录本身）
+        QMAKE_POST_LINK += cp -fR $$shell_quote($$PWD/bin/.) $$shell_quote($$DEPLOY_DST/) $$escape_expand(\\n\\t)
+    }
+} else {
+    warning("[log4qt] HAVE_LOG4QT not set; skipping bin/ deployment")
 }
 
 #-----------------------------------------------------------------------

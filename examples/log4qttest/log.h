@@ -10,7 +10,9 @@
 #include <QDateTime>
 #include <QThread>
 
+#ifdef HAVE_LOG4QT
 #include "log4qt/logger.h"
+#endif
 
 #define LOG_OUTPUT_MODE 4       //0.不处理 1.只回调 2.只打印 3.写文件 4.全处理
 
@@ -158,10 +160,12 @@ public slots:
 private:
     static Log *_pInstance;
     static QMutex _mutex;
+#ifdef HAVE_LOG4QT
     static Log4Qt::Logger * _pLoggerDebug;
     static Log4Qt::Logger * _pLoggerInfo;
     static Log4Qt::Logger * _pLoggerWarn;
     static Log4Qt::Logger * _pLoggerError;
+#endif
     static QString _configFilePath;
 
 };
